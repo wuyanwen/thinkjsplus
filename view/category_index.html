@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>分类</title>
+    {% include "./header.html" %}
+</head>
+
+<body>
+    <table id="example2" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>分类名称</th>
+                <th>备注</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    {% include "./footer.html" %}
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">  
+        <div class="modal-dialog" role="document">  
+            <div class="modal-content">  
+                <div class="modal-header">  
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">  
+                        <span aria-hidden="true">×</span>  
+                    </button>  
+                    <h4 class="modal-title" id="myModalLabel">编辑</h4>  
+                </div>  
+                <div class="modal-body">  
+                    <div class="form-group">
+                        <label for="name">分类名称</label>
+                        <input class="form-control" id="name" name="name" >
+                        <input type="hidden" class="form-control" id="id" name="id" >
+                    </div>
+                    <div class="form-group">
+                        <label for="remark">备注</label>
+                        <input class="form-control" id="remark" name="remark">
+                    </div>
+                </div>  
+                <div class="modal-footer">  
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>  
+                    <button type="button" class="btn btn-primary button">确认更新</button>  
+                </div>  
+            </div>  
+        </div>  
+    </div>  
+</body>
+<script>
+    $(function () {
+        $.ajax({
+            type: 'get',
+            url: 'http://127.0.0.1:8360/category/list',
+            success: function (data) {
+                //DataTable
+                var table = $('#example2').DataTable({
+                    'paging': true,
+                    'lengthChange': false,
+                    'searching': false,
+                    'ordering': true,
+                    'info': true,
+                    'autoWidth': false,
+                    'data': data,
+                    'columns': [
+                        {
+                            "data": "name"
+                        },
+                        {
+                            "data": "remark"
+                        }],
+                    "columnDefs": [{//设置 编辑按钮
+                        "targets": [2],
+                        "data": "id",
+                        "render": function (data, type, full) {
+                            return "<a class='edit' href='javascript:void(0)' edit='" + data + "'data-toggle='modal' data-target='#myModal' >编辑</a>&nbsp;&nbsp;&nbsp;&nbsp;<a class='del' del='" + data + "'href='javascript:void(0)'>删除</a>";
+                        }
+                    }],
+                    "oLanguage": {
+                        "sLengthMenu": "每页显示 _MENU_ 条记录",
+                        "sZeroRecords": "对不起，查询不到任何相关数据",
+                        "sInfo": "当前显示 _START_ 到 _END_ 条，共 _TOTAL_ 条记录",
+                        "sInfoEmtpy": "找不到相关数据",
+                        "sInfoFiltered": "数据表中共为 _MAX_ 条记录)",
+                        "sProcessing": "正在加载中...",
+                        "sSearch": "搜索",
+                        "sUrl": "", //多语言配置文件，可将oLanguage的设置放在一个txt文件中，例：Javascript/datatable/dtCH.txt
+                        "oPaginate": {
+                            "sFirst": "第一页",
+                            "sPrevious": " 上一页 ",
+                            "sNext": " 下一页 ",
+                            "sLast": " 最后一页 "
+                        }
+                    }, //多语言配置
+                })
+                //DataTable
+                //给行绑定选中事件
+                $('#example2 tbody').on('click', 'tr', function () {
+                    if ($(this).hasClass('selected')) {
+                        $(this).removeClass('selected');
+                    }
+                    else {
+                        table.$('tr.selected').removeClass('selected');
+                        $(this).addClass('selected');
+                    }
+                });
+                //删除
+                $(".del").click(function () {
+                    $.ajax({
+                        type: 'post',
+                        url: 'http://127.0.0.1:8360/category/del',
+                        data: { "id": $(this).attr("del") },
+                        success: function (data) {
+                            if (data.succ) {
+                                alert("删除成功");
+                                window.location.reload();
+                            } else {
+                                alert("删除失败");
+                            }
+                        }
+                    });
+                });
+                //编辑
+                $(".edit").click(function () {
+                    var data = table.row( $(this).parents('tr') ).data();
+                    $("#id").val(data.id);
+                    $("#name").val(data.name);
+                    $("#remark").val(data.remark);
+                });
+               
+            }
+        });
+        //编辑更新
+        $(".button").click(function () {
+            var name=$("#name").val();
+            var remark=$("#remark").val();
+            var id=$("#id").val();
+            $.ajax({
+                type: 'post',
+                url: 'http://127.0.0.1:8360/category/save',
+                data:{"name":name,"remark":remark,"id":id},
+                success: function (data) {
+                    if(data.succ){
+                        alert("更新成功");
+                        window.location.reload();
+                    }else{
+                        alert("更新失败");
+                    }
+                }
+            });
+
+        });
+    })
+
+</script>
+
+</html>
